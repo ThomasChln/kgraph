@@ -1,0 +1,62 @@
+---
+title: "K-Graphs"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    theme: spacelab 
+runtime: shiny
+---
+
+```{r}
+  devtools::load_all()
+  #library(sigmagraph)
+
+  dirpath = system.file('data', package = 'kgraph')
+  df_weights = get(load(file.path(dirpath, 'df_weights.rds')))
+  df_dict = get(load(file.path(dirpath, 'df_dict.rds')))
+
+  df_dict$desc = df_dict$label
+  df_dict$color = gsub('(.*):.*', '\\1', df_dict$id) %>%
+      gsub('NDFRT', 'RXNORM', .) %>% gsub('^[MX0-9].*', 'LOINC', .)
+  #df_dict$group = df_dict$color
+
+  selected_concepts = c('PheCode:300.11', 'PheCode:296.22')
+
+
+  react_kgraph = shiny::reactive({
+      kgraph = get_kgraph(input$selected_concepts, df_weights, df_dict)
+    })
+
+
+  color_levels = unique(df_dict$color) %>% c(seq_along(.)) %>%
+      matrix(nrow = 2, byrow = TRUE) %>% as.vector
+  colors_mapping = get_color_map(color_levels)
+
+
+  react_sgraph = shiny::reactive({
+      kgraph = react_kgraph()
+      sgraph = get_sgraph(kgraph, colors_mapping)
+    })
+
+  output$kg = sigmagraph::renderSigmagraph(react_sgraph())
+```
+
+# Options {.sidebar}
+
+##
+
+```{r}
+  shiny::selectInput('selected_concepts', 'Selected Concepts',
+                     sort(unique(df_dict$id)), multiple = TRUE,
+                     selected = c('PheCode:300.11', 'PheCode:296.22'))
+```
+
+# Graph
+
+##
+
+###
+
+```{r}
+  sigmagraph::sigmagraphOutput('kg', height = '100%')
+```

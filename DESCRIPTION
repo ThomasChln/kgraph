@@ -1,0 +1,26 @@
+Package: kgraph
+Title: Knowledge graphs
+Version: 0.1.0
+Authors@R: c(person("Thomas", "Charlon", role = c("aut", "cre"),
+                    email = "charlon@protonmail.com",
+                    comment = c(ORCID = "0000-0001-7497-0470")),
+             person("CELEHS", role = "aut", comment = "<https://celehs.hms.harvard.edu>"),
+             person("PARSE Health", role = "aut", comment = "<https://parse-health.org>"))
+Description: Knowledge graphs for Shiny apps by CELEHS laboratory and Parse Health on shiny.parse-health.org
+Imports:
+    dplyr,
+    magrittr,
+    RColorBrewer,
+    reshape2,
+    sigmagraph
+Depends:
+    R (>= 2.15)
+Suggests:
+    knitr,
+    testthat
+VignetteBuilder: knitr
+License: GPL-3
+Encoding: UTF-8
+RoxygenNote: 7.3.1
+URL: https://github.com/thomaschln/kgraph
+BugReports: https://github.com/thomaschln/kgraph/-/issues

@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+  manual:
+    build: ./
+    volumes:
+      - ./:/kgraph/
+    working_dir: /kgraph
+    command: make doc.pdf
+  vignette:
+    build: ./
+    volumes:
+      - ./:/kgraph/
+    working_dir: /kgraph
+    command: make vignette
+  build_doc:
+    build: ./
+    volumes:
+      - ./:/kgraph/
+    working_dir: /kgraph/
+    command: make roxygenise
+  pkg_test:
+    build: ./
+    volumes:
+      - ./:/kgraph/
+    working_dir: /kgraph/
+    command: make devtools_test
+  pkg_check:
+    build: ./
+    volumes:
+      - ./:/kgraph/
+    working_dir: /kgraph/
+    command: make
+  shiny:
+    build: ./
+    user: shiny
+    command: /usr/bin/shiny-server /srv/shiny-server/shiny-server.conf 
+    ports:
+      - "3838:3838"
+    volumes:
+      - ./:/srv/
+
+
