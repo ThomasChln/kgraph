@@ -15,7 +15,7 @@ fit_embeds_to_pairs = function(m_embeds, df_pairs,
                        df_pairs[[df_pairs_cols[2]]] %in% pairs_intersect)
 
   # if not too much concepts, get similarity on all for projections
-  if (nrow(m_embeds) > 4e3) {
+  if (nrow(m_embeds) > 1e3) {
       concepts_embeds = pairs_intersect
       if (!is.null(add_concepts)) concepts_embeds %<>% c(add_concepts)
   }

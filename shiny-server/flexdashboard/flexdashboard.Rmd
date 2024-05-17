@@ -1,5 +1,5 @@
 ---
-title: "K-Graphs"
+title: "Knowledge Graphs"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -12,25 +12,26 @@ runtime: shiny
   #library(sigmagraph)
 
   dirpath = system.file('data', package = 'kgraph')
-  df_weights = get(load(file.path(dirpath, 'df_weights.rds')))
+  m_embeds = get(load(file.path(dirpath, 'm_embeds.rds')))
   df_dict = get(load(file.path(dirpath, 'df_dict.rds')))
+  df_pairs = get(load(file.path(dirpath, 'df_cuis_pairs.rds')))
 
   df_dict$desc = df_dict$label
-  df_dict$color = gsub('(.*):.*', '\\1', df_dict$id) %>%
-      gsub('NDFRT', 'RXNORM', .) %>% gsub('^[MX0-9].*', 'LOINC', .)
+  df_dict$color = df_dict$group_details
   #df_dict$group = df_dict$color
 
-  selected_concepts = c('PheCode:300.11', 'PheCode:296.22')
+  colors_mapping = get_color_map(unique(df_dict$color))
+
+  react_fit = shiny::reactive({
+      fit_kg = fit_embeds_to_pairs(m_embeds, df_pairs, c('umls_id.x', 'umls_id.y'))
+      df_projs = fit_kg$df_projs
+    })
 
 
   react_kgraph = shiny::reactive({
       kgraph = get_kgraph(input$selected_concepts, df_weights, df_dict)
     })
 
-
-  color_levels = unique(df_dict$color) %>% c(seq_along(.)) %>%
-      matrix(nrow = 2, byrow = TRUE) %>% as.vector
-  colors_mapping = get_color_map(color_levels)
 
 
   react_sgraph = shiny::reactive({
