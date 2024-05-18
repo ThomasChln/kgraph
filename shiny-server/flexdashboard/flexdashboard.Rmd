@@ -7,6 +7,14 @@ output:
 runtime: shiny
 ---
 
+```{css selectize-input, echo = FALSE}
+.selectize-control .selectize-input {
+  max-height: 100px;
+  overflow-y: auto;
+}
+```
+
+
 ```{r}
   devtools::load_all()
   #library(sigmagraph)
@@ -20,26 +28,60 @@ runtime: shiny
   df_dict$color = df_dict$group_details
   #df_dict$group = df_dict$color
 
-  colors_mapping = get_color_map(unique(df_dict$color))
+  df_pairs_cols = c('umls_id.x', 'umls_id.y')
+
+  # debug
+  concepts_embeds = rownames(m_embeds)
+  pairs_intersect = intersect(concepts_embeds,
+                              unique(unlist(df_pairs[df_pairs_cols])))
+
+  # tail is more related to mental health
+  # subset(df_dict, id %in% pairs_intersect)$label
+  select_cuis = tail(pairs_intersect, 500)
+  m_embeds = m_embeds[select_cuis, ]
+  df_dict = subset(df_dict, id %in% select_cuis)
+
+  target_strs = c('autistic spectrum', 'depressi', 'alcohol' ,'sleep',
+		  'psychosis', 'dementia', 'insomnia')
+  target_idxs = grep(paste(target_strs, collapse = '|'), df_dict$label)
+  target_cuis = df_dict$id[target_idxs]
+  #
 
   react_fit = shiny::reactive({
-      fit_kg = fit_embeds_to_pairs(m_embeds, df_pairs, c('umls_id.x', 'umls_id.y'))
+      similarity = input$similarity
+      threshold_projs = input$threshold_projs
+      fit_kg = fit_embeds_to_pairs(m_embeds, df_pairs[df_pairs_cols],
+				   similarity = similarity,
+				   threshold_projs = 1 - threshold_projs / 100)
       df_projs = fit_kg$df_projs
     })
 
 
   react_kgraph = shiny::reactive({
-      kgraph = get_kgraph(input$selected_concepts, df_weights, df_dict)
+      df_projs = react_fit()
+      target_cuis = input$selected_concepts
+      kgraph = get_kgraph(target_cuis, df_projs, df_dict)
     })
 
 
+  colors_mapping = get_color_map(c(unique(df_dict$color), 'Groups', 'Other'))
 
   react_sgraph = shiny::reactive({
       kgraph = react_kgraph()
-      sgraph = get_sgraph(kgraph, colors_mapping)
+      label_grid_size = input$label_grid_size
+      sgraph = get_sgraph(kgraph, colors_mapping,
+			  label_grid_cell_size = label_grid_size)
+    })
+
+  react_legend = shiny::reactive({
+      kgraph = react_kgraph()
+      gglegend = sigmagraph:::get_legend(colors_mapping,
+					 unique(kgraph$df_nodes$clusters))
     })
 
   output$kg = sigmagraph::renderSigmagraph(react_sgraph())
+  output$legend = shiny::renderPlot(grid::grid.draw(react_legend()))
+
 ```
 
 # Options {.sidebar}
@@ -47,9 +89,21 @@ runtime: shiny
 ##
 
 ```{r}
+  shiny::selectInput('similarity', 'Similarity', 
+    c('inprod', 'cosine', 'cov_simi', 'norm_inprod'), selected = 'cosine')
+
+  shiny::sliderInput('threshold_projs', 'False positive threshold (%)',
+		     0, 100, 10)
+
+
   shiny::selectInput('selected_concepts', 'Selected Concepts',
                      sort(unique(df_dict$id)), multiple = TRUE,
-                     selected = c('PheCode:300.11', 'PheCode:296.22'))
+                     selected = target_cuis, selectize = TRUE)
+
+  # probably could depend on window size
+  shiny::sliderInput('label_grid_size',
+                     htmltools::HTML('Label grid size</br>(Smaller = more labels)'),
+                     1, 2e3, 500, ticks = FALSE)
 ```
 
 # Graph
@@ -59,5 +113,10 @@ runtime: shiny
 ###
 
 ```{r}
-  sigmagraph::sigmagraphOutput('kg', height = '100%')
+  fillPage(sigmagraph::sigmagraphOutput('kg', height = '100%'),
+           absolutePanel(id = 'legend', class = 'panel panel-default',
+                         fixed = TRUE, draggable = TRUE, top = 100,
+    	                 left = 'auto', right = 20, bottom = 'auto',
+    	                 width = 120, height = '400px',
+                         plotOutput('legend', height = '400px')))
 ```

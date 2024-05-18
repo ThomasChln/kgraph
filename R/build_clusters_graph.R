@@ -17,6 +17,7 @@ build_kgraph = function(selected_concept, df_weights, df_dict,
   # link nodes to groups
   if (!is.null(df_merge$group)) {
     l_df_merge = merge_per_groups(df_merge, rm_single_groups, str_other)
+
     second_order_links = switch_clusters_type(l_df_merge, selected_concept,
                                               type = 2) 
   } else {
@@ -58,9 +59,7 @@ build_kgraph = function(selected_concept, df_weights, df_dict,
 
   df_links = rbind(first_order_links, second_order_links, third_order_links)
 
-  stopifnot(nrow(df_nodes) == length(unique(unlist(df_links[1:2]))))
-
-  list(df_links = df_links, df_nodes = df_nodes)
+  check_kgraph(df_nodes, df_links)
 }
 
 build_kgraph_nodes = function(first_order_links, second_order_links,
@@ -79,7 +78,7 @@ build_kgraph_nodes = function(first_order_links, second_order_links,
   if (!is.null(second_order_links)) {
     group_idxs = match(unique(second_order_links$from), df_dict$group)
     df_groups = unique(second_order_links$from) %>%
-        cbind(id = ., desc = ., color = df_dict$color[group_idxs])
+        cbind.data.frame(id = ., desc = ., color = df_dict$color[group_idxs])
     df_groups$color = 'Groups'
   } else {
     df_groups = NULL
@@ -124,8 +123,8 @@ build_kgraph_nodes = function(first_order_links, second_order_links,
   df_nodes$selected_concept = selected_concept
 
   ## reduce group edges
-  #group_edges = df_links$from %in% subset(df_nodes, clusters == 'Groups')$word
-  #df_links$weight[group_edges] %<>% `/`(2)
+  # group_edges = df_links$from %in% subset(df_nodes, clusters == 'Groups')$word
+  # df_links$weight[group_edges] %<>% `/`(2)
 
   df_nodes
 }
@@ -174,25 +173,6 @@ links_by_cluster = function(df_merge_grp, to_col = 'concept2') {
    # data.frame(df_merge_grp[[to_col]],
    #    diff(range(df_merge_grp$weight)) / 1.5) %>%
       setNames(c(to_col, 'weight'))
-}
-
-# NOTE to sigmagraph
-get_legend = function(colors_mapping, clusters) {
-
-  colors_mapping %<>% subset(group %in% clusters)
-  colors_mapping %<>% cbind(data.frame(x = 1, y = 1))
-  colors_mapping$group %<>% factor(unique(.))
-
-  gglegend = ggplot2::ggplot(colors_mapping,
-                             ggplot2::aes(x, y, color = group)) +
-      ggplot2::geom_point(size = 10) +
-      ggplot2::scale_color_manual(name = NULL, values = colors_mapping$color) +
-      ggplot2::theme_bw() +
-      ggplot2::theme(legend.text.position = 'top',
-                     legend.title = ggplot2::element_text(size = 20),
-                     legend.text = ggplot2::element_text(size = 15))
-
-  gglegend = cowplot::get_legend(gglegend)
 }
 
 get_color_map = function(color_levels) {

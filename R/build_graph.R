@@ -5,11 +5,16 @@ merge_per_groups = function(df_merge, rm_single_groups, str_other) {
   if (!rm_single_groups) return(l_df_merge)
 
   single_nodes = sapply(l_df_merge, nrow) == 1
+  if (sum(single_nodes) == 0) return(l_df_merge)
+
+  # if the "other" group didn't exist yet
+  if (is.null(l_df_merge[[str_other]])) single_nodes %<>% c(FALSE)
+
   l_df_merge[[str_other]] %<>% rbind(do.call(rbind, l_df_merge[single_nodes]))
   l_df_merge[[str_other]]$group = str_other
   l_df_merge[[str_other]]$color = str_other
 
-  l_df_merge = l_df_merge[!single_nodes]
+  l_df_merge[!single_nodes]
 }
 
 # when a node is from a one-indiv group for one pheno (-> assigned to other)
@@ -25,7 +30,8 @@ merge_kgraphs = function(l_graphs, df_dict, spring_weights = FALSE,
   df_nodes = do.call(rbind, lapply(l_graphs, `[[`, 'df_nodes'))
 
   if (!is.null(df_dict$group)) {
-    l_graph = merge_kgraphs_groups(df_links, df_nodes, df_dict, str_other)
+    l_graph = merge_kgraphs_groups(df_links, df_nodes, df_dict, str_other,
+				   names(l_graphs))
     df_links = l_graph$df_links
     df_nodes = l_graph$df_nodes
   }
@@ -44,7 +50,7 @@ merge_kgraphs = function(l_graphs, df_dict, spring_weights = FALSE,
                        desc = desc[1], 
                        clusters = ifelse(length(unique(clusters)) > 1,
                                          subset(clusters,
-                                                clusters != 'Other gene'),
+                                                clusters != str_other),
                                          clusters))
 
   df_nodes$weight[df_nodes$word %in% names(l_graphs)] = max(df_nodes$weight)
@@ -85,12 +91,34 @@ merge_kgraphs = function(l_graphs, df_dict, spring_weights = FALSE,
   df_links$weight %<>% sigmagraph:::scale_graph()
   df_nodes$weight %<>% sigmagraph:::scale_graph()
 
-  stopifnot(nrow(df_nodes) == length(unique(unlist(df_links[1:2]))))
+  check_kgraph(df_nodes, df_links)
+}
+
+check_kgraph = function(df_nodes, df_links) {
+
+  # check dims
+  if (nrow(df_nodes) != length(unique(unlist(df_links[1:2])))) {
+
+    id_diff = setdiff(df_nodes$word, unique(unlist(df_links[1:2]))) %>%
+	    paste(collapse = ', ')
+
+    warning(paste('Number of nodes different than unique edges elements.',
+		  'Id differences:', id_diff, sep = '\n'))
+  }
+
+  if (any(is.na(df_nodes$word))) warning('Node ids have NAs')
 
   list(df_links = df_links, df_nodes = df_nodes)
 }
 
-merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other) {
+# having rm_single_groups TRUE can make the merge tricky
+# consider the case where in the first graph a node is single and set to other,
+## but in second graph the group exists
+# a more tricky case is when two nodes of the same group are set to other in
+## each graph -> need to add nodes (cf. "if (length(new_nodes))")
+# finally, consider the possibility that the Other node has to be removed
+merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other,
+			       	target_names) {
 
   nodes_other = df_links$from == str_other
   grp_idxs = match(df_links$to[nodes_other], df_dict$id)
@@ -99,6 +127,10 @@ merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other) {
   single_grps = names(which(table(df_links$from) == 1))
   reset_other = df_links$from[nodes_other] %in% single_grps
   df_links$from[nodes_other][reset_other] = str_other
+
+  if (!any(reset_other)) {
+    df_nodes %<>% subset(word != str_other)
+  }
  
   new_nodes = setdiff(unique(unlist(df_links[1:2])), unique(df_nodes$word))
 
@@ -107,7 +139,7 @@ merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other) {
     df_new_nodes = data.frame(word = new_nodes, desc = new_nodes,
                               clusters = 'Groups',
                               display_val = NA,
-                              selected_concept = names(l_graphs)[1])
+                              selected_concept = target_names[1])
 
     df_new_nodes$weight = subset(df_links, from %in% new_nodes) %>%
       dplyr::group_by(from) %>%
@@ -123,7 +155,7 @@ merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other) {
   df_nodes$clusters[links_idxs] = df_dict$color[links_dict_idxs]
  
   df_grp_wts = subset(df_links,
-                      from %in% names(l_graphs) & to %in% df_dict$id)
+                      from %in% target_names & to %in% df_dict$id)
   df_grp_wts = df_grp_wts %>% dplyr::group_by(to) %>%
       dplyr::summarize(weight = max(weight))
 

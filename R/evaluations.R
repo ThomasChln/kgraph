@@ -1,7 +1,7 @@
-fit_embeds_to_pairs = function(m_embeds, df_pairs,
-  df_pairs_cols = c('PheCode.x', 'PheCode.y'),
+fit_embeds_to_pairs = function(m_embeds, df_pairs, df_pairs_cols = 1:2,
   similarity = c('inprod', 'cosine', 'cov_simi', 'norm_inprod'),
-  sparse_coding = c('none', 'epsilon'), add_concepts = NULL, ...) {
+  sparse_coding = c('none', 'epsilon'), add_concepts = NULL, ...,
+  threshold_projs = 0.9) {
 
   similarity = match.arg(similarity)
   sparse_coding = match.arg(sparse_coding)
@@ -24,7 +24,7 @@ fit_embeds_to_pairs = function(m_embeds, df_pairs,
       stopifnot(dist_method %in% c('cosine', 'norm_inprod'))
       sparse_encode(m_embeds, dist_method = similarity, ...)
     } else {
-      similarity_fun = switch(similarity, cosine = text2vec::cosine,
+      similarity_fun = switch(similarity, cosine = text2vec::sim2,
                               get(similarity))
       similarity_fun(m_embeds)
     }
@@ -45,7 +45,7 @@ fit_embeds_to_pairs = function(m_embeds, df_pairs,
   # return what's needed for partial AUC and projections
   threshold_5fp = get_cutoff_threshold(roc_obj)
   df_projs = project_pairs(m_simi,
-                           get_cutoff_threshold(roc_obj, 0.9))
+                           get_cutoff_threshold(roc_obj, threshold_projs))
 
   embeds_pairs_fit = list(roc = roc_obj, sims = sims, truth = truth,
                           threshold_5fp = threshold_5fp,
@@ -83,6 +83,8 @@ project_pairs = function(m_simi, threshold) {
   m_simi = ifelse(lower.tri(m_simi), m_simi, 0)
   dimnames(m_simi) = simi_dimnames
   df_preds = reshape2::melt(m_simi) %>% subset(value > threshold)
+  df_preds[[1]] %<>% as.character
+  df_preds[[2]] %<>% as.character
 
   df_preds = df_preds[order(df_preds$value, decreasing = TRUE), ]
 

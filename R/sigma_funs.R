@@ -40,15 +40,16 @@ get_kgraph = function(selected_concepts, df_weights, df_dict) {
   kgraph
 }
 
-get_sgraph = function(l_graph, colors_mapping, label_attrs = 'label') {
+get_sgraph = function(l_graph, colors_mapping, label_attrs = 'label', ...) {
 
   igraph = sigmagraph:::l_graph_to_igraph(l_graph)
 
   sgraph = sigmagraph:::sigma_mutuals(igraph, niter = 1e3,
-				                      node_size = 'weight',
+				      node_size = 'weight',
                                       label = label_attrs,
-				                      color_map = colors_mapping,
-                                      layout = igraph::layout_with_kk(igraph))
+				      color_map = colors_mapping,
+                                      layout = igraph::layout_with_kk(igraph),
+                                      ...)
   
   sgraph %<>% sigmagraph::add_edge_color(one_color = l_graph$df_links$color)
   sgraph %<>% sigmagraph:::add_edge_zindex(zindex = l_graph$df_links$zindex)
