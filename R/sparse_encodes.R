@@ -85,10 +85,10 @@ exp_transform <- function(vec, sigma) {
 ##############################################################################
 #' dist_matrix
 #'
-#' Dispatch of amap::Dist, lsa::cosine, and norm_inprod methods.
+#' Dispatch of amap::Dist, text2vec::sim2, and norm_inprod methods.
 #'
 #' @param data    Rectangular numeric matrix [Observations, Features]
-#' @param method  Methods accepted by amap::Dist or cosine
+#' @param method  Methods accepted by amap::Dist or cosine and norm_inprod
 #' @param n_cores Number of cores
 #' @return Dissimarility symmetric matrix
 #'
@@ -102,7 +102,7 @@ dist_matrix <- function(data, method = 'euclidean', n_cores = 1) {
 
   if (!method %in% methods) stop('Invalid distance method')
 
-  switch(method, cosine = 1 - lsa::cosine(t(data)),
+  switch(method, cosine = 1 - text2vec::sim2(data),
     norm_inprod = -norm_inprod(data), {
       as.matrix(amap::Dist(data, method, nbproc = n_cores))
     })

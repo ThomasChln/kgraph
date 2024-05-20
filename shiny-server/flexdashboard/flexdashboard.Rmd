@@ -49,16 +49,18 @@ runtime: shiny
 
   react_fit = shiny::reactive({
       similarity = input$similarity
+      sparse_coding = input$sparse_coding
       threshold_projs = input$threshold_projs
       fit_kg = fit_embeds_to_pairs(m_embeds, df_pairs[df_pairs_cols],
 				   similarity = similarity,
+				   sparse_coding = sparse_coding,
 				   threshold_projs = 1 - threshold_projs / 100)
-      df_projs = fit_kg$df_projs
     })
 
 
   react_kgraph = shiny::reactive({
-      df_projs = react_fit()
+      fit_kg = react_fit()
+      df_projs = fit_kg$df_projs
       target_cuis = input$selected_concepts
       kgraph = get_kgraph(target_cuis, df_projs, df_dict)
     })
@@ -79,8 +81,14 @@ runtime: shiny
 					 unique(kgraph$df_nodes$clusters))
     })
 
+  react_auc = shiny::reactive({
+      fit_kg = react_fit()
+      pROC::plot.roc(fit_kg$roc, print.auc = TRUE)
+    })
+
   output$kg = sigmagraph::renderSigmagraph(react_sgraph())
   output$legend = shiny::renderPlot(grid::grid.draw(react_legend()))
+  output$auc = shiny::renderPlot(react_auc(), res = 96)
 
 ```
 
@@ -91,6 +99,9 @@ runtime: shiny
 ```{r}
   shiny::selectInput('similarity', 'Similarity', 
     c('inprod', 'cosine', 'cov_simi', 'norm_inprod'), selected = 'cosine')
+
+  shiny::selectInput('sparse_coding', 'Sparse coding', 
+    c('none', 'epsilon'), selected = 'none')
 
   shiny::sliderInput('threshold_projs', 'False positive threshold (%)',
 		     0, 100, 10)
@@ -113,10 +124,22 @@ runtime: shiny
 ###
 
 ```{r}
+  # some target nodes have no groups ?
+  # is drug abstinence linked to dementia ? lol
   fillPage(sigmagraph::sigmagraphOutput('kg', height = '100%'),
            absolutePanel(id = 'legend', class = 'panel panel-default',
                          fixed = TRUE, draggable = TRUE, top = 100,
     	                 left = 'auto', right = 20, bottom = 'auto',
     	                 width = 120, height = '400px',
                          plotOutput('legend', height = '400px')))
+```
+
+# AUC
+
+##
+
+###
+
+```{r}
+  shiny::plotOutput('auc', height = '100%')
 ```

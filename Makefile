@@ -39,3 +39,11 @@ vignette:
 
 clean:
 	$(RM) doc.pdf
+
+build_cuis_pairs:
+	wget -O kg.csv https://dataverse.harvard.edu/api/access/datafile/6180620
+	mv kg.csv inst/extdata/
+	R -e "source('scripts/primekg_to_cuis.R')"
+
+build_dictionary:
+	R -e "source('scripts/build_dict.R')"

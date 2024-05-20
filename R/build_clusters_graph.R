@@ -6,6 +6,12 @@ build_kgraph = function(selected_concept, df_weights, df_dict,
 
   df_weights %<>% subset(concept1 == selected_concept |
                          concept2 == selected_concept)
+
+  if (nrow(df_weights) == 0) {
+          message('Note: selected concept not found in df_weights')
+          return()
+  }
+
   df_weights %<>% order_dataframe(relevant_pattern = selected_concept)
 
   df_merge = merge(df_weights, df_dict, by.x = 'concept2', by.y = 'id')

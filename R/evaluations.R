@@ -1,60 +1,51 @@
-fit_embeds_to_pairs = function(m_embeds, df_pairs, df_pairs_cols = 1:2,
-  similarity = c('inprod', 'cosine', 'cov_simi', 'norm_inprod'),
-  sparse_coding = c('none', 'epsilon'), add_concepts = NULL, ...,
-  threshold_projs = 0.9) {
-
-  similarity = match.arg(similarity)
-  sparse_coding = match.arg(sparse_coding)
-
-  # intersect pairs and embeds
-  concepts_embeds = rownames(m_embeds)
-  pairs_intersect = intersect(concepts_embeds,
-                              unique(unlist(df_pairs[df_pairs_cols])))
-
-  df_pairs %<>% subset(df_pairs[[df_pairs_cols[1]]] %in% pairs_intersect &
-                       df_pairs[[df_pairs_cols[2]]] %in% pairs_intersect)
-
-  # if not too much concepts, get similarity on all for projections
-  if (nrow(m_embeds) > 1e3) {
-      concepts_embeds = pairs_intersect
-      if (!is.null(add_concepts)) concepts_embeds %<>% c(add_concepts)
-  }
-
-  m_simi = if (sparse_coding == 'epsilon') {
-      stopifnot(dist_method %in% c('cosine', 'norm_inprod'))
-      sparse_encode(m_embeds, dist_method = similarity, ...)
-    } else {
-      similarity_fun = switch(similarity, cosine = text2vec::sim2,
-                              get(similarity))
-      similarity_fun(m_embeds)
-    }
-
-  # we need as many false relations to test AUC,
-  # make sure true pairs are also ordered
-  df_pairs[df_pairs_cols] %<>% order_dataframe
-  df_allpairs = df_pairs[df_pairs_cols] %>%
-      rbind(gen_df_notpairs(pairs_intersect, .), .)
-
-  # not very elegant right
-  sims = apply(df_allpairs, 1, function(pairs) m_simi[pairs[[1]], pairs[[2]]])
-
-  # fit roc
-  truth = rep(0:1, each = nrow(df_pairs))
-  roc_obj = pROC::roc(truth, sims, direction = '<', quiet = TRUE)
-
-  # return what's needed for partial AUC and projections
-  threshold_5fp = get_cutoff_threshold(roc_obj)
-  df_projs = project_pairs(m_simi,
-                           get_cutoff_threshold(roc_obj, threshold_projs))
-
-  embeds_pairs_fit = list(roc = roc_obj, sims = sims, truth = truth,
-                          threshold_5fp = threshold_5fp,
-                          n_concepts = length(concepts_embeds),
-                          df_projs = df_projs)
-
-  embeds_pairs_fit
-}
-
+fit_embeds_to_pairs = function(m_embeds, df_pairs, df_pairs_cols = 1:2,         
+  similarity = c('inprod', 'cosine', 'cov_simi', 'norm_inprod'),                
+  add_concepts = NULL, threshold_projs = 0.9) {                                 
+                                                                                
+  similarity = match.arg(similarity)                                            
+                                                                                
+  # intersect pairs and embeds                                                  
+  concepts_embeds = rownames(m_embeds)                                          
+  pairs_intersect = intersect(concepts_embeds,                                  
+                              unique(unlist(df_pairs[df_pairs_cols])))          
+                                                                                
+  df_pairs %<>% subset(df_pairs[[df_pairs_cols[1]]] %in% pairs_intersect &      
+                       df_pairs[[df_pairs_cols[2]]] %in% pairs_intersect)       
+                                                                                
+  # if not too much concepts, get similarity on all for projections             
+  if (nrow(m_embeds) > 1e4) {                                                   
+      concepts_embeds = pairs_intersect                                         
+      if (!is.null(add_concepts)) concepts_embeds %<>% c(add_concepts)          
+      m_embeds = m_embeds[concepts_embeds, ]                                    
+  }                                                                             
+                                                                                
+  similarity_fun = switch(similarity, cosine = text2vec::sim2,                  
+                          get(similarity))                                      
+  m_simi = similarity_fun(m_embeds)                                             
+                                                                                
+  # we need as many false relations to test AUC,                                
+  # make sure true pairs are also ordered                                       
+  df_pairs[df_pairs_cols] %<>% order_dataframe                                  
+  df_allpairs = df_pairs[df_pairs_cols] %>%                                     
+      rbind(gen_df_notpairs(pairs_intersect, .), .)                             
+                                                                                
+  # not very elegant right                                                      
+  sims = apply(df_allpairs, 1, function(pairs) m_simi[pairs[[1]], pairs[[2]]])  
+                                                                                
+  # fit roc                                                                     
+  truth = rep(0:1, each = nrow(df_pairs))                                       
+  roc_obj = pROC::roc(truth, sims, direction = '<', quiet = TRUE)               
+                                                                                
+  # return what's needed for partial AUC and projections                        
+  threshold_5fp = get_cutoff_threshold(roc_obj)                                 
+  df_projs = project_pairs(m_simi,                                              
+                           get_cutoff_threshold(roc_obj, threshold_projs))      
+                                                                                
+  list(roc = roc_obj, sims = sims, truth = truth,                               
+       threshold_5fp = threshold_5fp, n_concepts = length(concepts_embeds),     
+       df_projs = df_projs)                                                     
+}                                                                               
+                                                     
 get_ppv = function(l_fit_embeds,
                    threshold = get_cutoff_threshold(l_fit_embeds$roc)) {
 
