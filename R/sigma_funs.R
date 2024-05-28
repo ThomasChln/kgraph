@@ -33,7 +33,7 @@ get_kgraph = function(selected_concepts, df_weights, df_dict) {
                          display_val_str = '\nCosine similarity: ')
 
   kgraph$df_links = kgraph %$%
-	  sigmagraph:::highlight_multiple_connected(df_links, selected_concepts)
+	  sgraph:::highlight_multiple_connected(df_links, selected_concepts)
 
   kgraph$df_nodes %<>% multiline_labels('\nCosine similarity: ')
 
@@ -42,15 +42,15 @@ get_kgraph = function(selected_concepts, df_weights, df_dict) {
 
 get_sgraph = function(l_graph, colors_mapping, label_attrs = 'label', ...) {
 
-  igraph = sigmagraph:::l_graph_to_igraph(l_graph)
+  igraph = sgraph:::l_graph_to_igraph(l_graph)
 
-  sgraph = sigmagraph:::sigma_mutuals(igraph, niter = 1e3,
+  sgraph = sgraph:::sigma_mutuals(igraph, niter = 1e3,
 				      node_size = 'weight',
                                       label = label_attrs,
 				      color_map = colors_mapping,
                                       layout = igraph::layout_with_kk(igraph),
                                       ...)
   
-  sgraph %<>% sigmagraph::add_edge_color(one_color = l_graph$df_links$color)
-  sgraph %<>% sigmagraph:::add_edge_zindex(zindex = l_graph$df_links$zindex)
+  sgraph %<>% sgraph::add_edge_color(one_color = l_graph$df_links$color)
+  sgraph %<>% sgraph:::add_edge_zindex(zindex = l_graph$df_links$zindex)
 }

@@ -185,5 +185,5 @@ get_color_map = function(color_levels) {
 
   palette = RColorBrewer::brewer.pal(length(color_levels), 'Paired')
 
-  sigmagraph:::get_color_map(color_levels, palette)
+  sgraph:::get_color_map(color_levels, palette)
 }

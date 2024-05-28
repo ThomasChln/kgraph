@@ -17,7 +17,7 @@ runtime: shiny
 
 ```{r}
   devtools::load_all()
-  #library(sigmagraph)
+  #library(sgraph)
 
   dirpath = system.file('data', package = 'kgraph')
   m_embeds = get(load(file.path(dirpath, 'm_embeds.rds')))
@@ -77,7 +77,7 @@ runtime: shiny
 
   react_legend = shiny::reactive({
       kgraph = react_kgraph()
-      gglegend = sigmagraph:::get_legend(colors_mapping,
+      gglegend = sgraph:::get_legend(colors_mapping,
 					 unique(kgraph$df_nodes$clusters))
     })
 
@@ -86,7 +86,7 @@ runtime: shiny
       pROC::plot.roc(fit_kg$roc, print.auc = TRUE)
     })
 
-  output$kg = sigmagraph::renderSigmagraph(react_sgraph())
+  output$kg = sgraph::rendersgraph(react_sgraph())
   output$legend = shiny::renderPlot(grid::grid.draw(react_legend()))
   output$auc = shiny::renderPlot(react_auc(), res = 96)
 
@@ -126,7 +126,7 @@ runtime: shiny
 ```{r}
   # some target nodes have no groups ?
   # is drug abstinence linked to dementia ? lol
-  fillPage(sigmagraph::sigmagraphOutput('kg', height = '100%'),
+  fillPage(sgraph::sgraphOutput('kg', height = '100%'),
            absolutePanel(id = 'legend', class = 'panel panel-default',
                          fixed = TRUE, draggable = TRUE, top = 100,
     	                 left = 'auto', right = 20, bottom = 'auto',

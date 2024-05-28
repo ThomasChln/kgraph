@@ -86,10 +86,10 @@ merge_kgraphs = function(l_graphs, df_dict, spring_weights = FALSE,
   # NOTE may need to recompute group weights for fixed nodes/links
   # although rare edge cases
 
-  if (spring_weights) df_links %<>% sigmagraph:::convert_to_spring_weights()
+  if (spring_weights) df_links %<>% sgraph:::convert_to_spring_weights()
 
-  df_links$weight %<>% sigmagraph:::scale_graph()
-  df_nodes$weight %<>% sigmagraph:::scale_graph()
+  df_links$weight %<>% sgraph:::scale_graph()
+  df_nodes$weight %<>% sgraph:::scale_graph()
 
   check_kgraph(df_nodes, df_links)
 }
