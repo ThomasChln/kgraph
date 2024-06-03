@@ -36,7 +36,7 @@ services:
     user: shiny
     command: /usr/bin/shiny-server /srv/shiny-server/shiny-server.conf 
     ports:
-      - "3838:3838"
+      - "9083:3838"
     volumes:
       - ./:/srv/
 
