@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R: c(person("Thomas", "Charlon", role = c("aut", "cre"),
                     email = "charlon@protonmail.com",
                     comment = c(ORCID = "0000-0001-7497-0470")),
-             person("Hongyi", "Yuan", role = "ctb"),
+             person("Hongyi", "Yuan", role = "ctb", comment = c(ORCID = "0000-0003-2597-1973")),
              person("CELEHS", role = "aut", comment = "<https://celehs.hms.harvard.edu>"),
              person("PARSE Health", role = "aut", comment = "<https://parse-health.org>"))
 Description: Knowledge graphs for Shiny apps by CELEHS laboratory and Parse Health on shiny.parse-health.org
