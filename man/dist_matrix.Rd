@@ -9,7 +9,7 @@ dist_matrix(data, method = "euclidean", n_cores = 1)
 \arguments{
 \item{data}{Rectangular numeric matrix [Observations, Features]}
 
-\item{method}{Methods accepted by amap::Dist or cosine}
+\item{method}{Methods accepted by amap::Dist or cosine and norm_inprod}
 
 \item{n_cores}{Number of cores}
 }
@@ -17,5 +17,5 @@ dist_matrix(data, method = "euclidean", n_cores = 1)
 Dissimarility symmetric matrix
 }
 \description{
-Dispatch of amap::Dist, lsa::cosine, and norm_inprod methods.
+Dispatch of amap::Dist, text2vec::sim2, and norm_inprod methods.
 }
