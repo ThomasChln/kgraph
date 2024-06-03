@@ -43,9 +43,9 @@ runtime: shiny
   m_embeds = m_embeds[select_cuis, ]
   df_dict = subset(df_dict, id %in% select_cuis)
 
-  target_strs = c('autistic spectrum', 'depressi', 'alcohol' ,'sleep',
-		  'psychosis', 'dementia', 'insomnia')
-  target_strs = 'suicid'
+  target_strs = c('autistic spectrum', #'depressi', 'alcohol' ,'sleep',
+		  'psychosis', 'dementia')#, 'insomnia')
+  #target_strs = 'suicid'
   target_idxs = grep(paste(target_strs, collapse = '|'), df_dict$label)
   target_cuis = df_dict$id[target_idxs]
   similarity = 'cosine'; threshold_projs = 5; label_grid_size = 200
@@ -62,8 +62,9 @@ runtime: shiny
 
   react_kgraph = shiny::reactive({
       fit_kg = react_fit()
-      df_projs = fit_kg$df_projs
       target_cuis = input$selected_concepts
+
+      df_projs = fit_kg$df_projs
       kgraph = get_kgraph(target_cuis, df_projs, df_dict)
     })
 

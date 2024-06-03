@@ -3,7 +3,7 @@ multiline_labels = function(df_nodes, display_val_str = '\nP-value: ',
 
   if (!replace_codes) {
     df_nodes$label = df_nodes$desc %>% {
-        ifelse(df_nodes$word != .,
+        ifelse(df_nodes$id != .,
                paste0(ifelse(grepl('^[0-9]$', .), 'Max. phase: ', 'Label: '),
                       ., '\n'),
                '')
@@ -13,7 +13,7 @@ multiline_labels = function(df_nodes, display_val_str = '\nP-value: ',
 
   } else {
 
-    df_nodes$label = df_nodes$desc %>% ifelse(is.na(.), df_nodes$word, .)
+    df_nodes$label = df_nodes$desc %>% ifelse(is.na(.), df_nodes$id, .)
   }
 
   val_labels = df_nodes$display_val %>%

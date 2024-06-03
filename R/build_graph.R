@@ -41,7 +41,7 @@ merge_kgraphs = function(l_graphs, df_dict, spring_weights = FALSE,
       dplyr::summarize(weight = max(weight))
 
 
-  df_nodes %<>% dplyr::group_by(word) %>%
+  df_nodes %<>% dplyr::group_by(id) %>%
       dplyr::summarize(weight = max(weight),
                        display_val = ifelse(all(is.na(display_val)), NA,
                                             paste0(display_val, ' (',
@@ -53,12 +53,12 @@ merge_kgraphs = function(l_graphs, df_dict, spring_weights = FALSE,
                                                 clusters != str_other),
                                          clusters))
 
-  df_nodes$weight[df_nodes$word %in% names(l_graphs)] = max(df_nodes$weight)
+  df_nodes$weight[df_nodes$id %in% names(l_graphs)] = max(df_nodes$weight)
 
   if (!is.null(df_drugs)) {
 
     wts = diff(range(df_nodes$weight)) / c(5, 4.5, 3.5, 2.5)
-    phase_idx = match(df_nodes$word, df_drugs$drug_name)
+    phase_idx = match(df_nodes$id, df_drugs$drug_name)
     drug_phase = df_drugs$max_phase[na.omit(phase_idx)]
 
     df_nodes$weight[!is.na(phase_idx)] = wts[drug_phase]
@@ -99,14 +99,14 @@ check_kgraph = function(df_nodes, df_links) {
   # check dims
   if (nrow(df_nodes) != length(unique(unlist(df_links[1:2])))) {
 
-    id_diff = setdiff(df_nodes$word, unique(unlist(df_links[1:2]))) %>%
+    id_diff = setdiff(df_nodes$id, unique(unlist(df_links[1:2]))) %>%
 	    paste(collapse = ', ')
 
     warning(paste('Number of nodes different than unique edges elements.',
 		  'Id differences:', id_diff, sep = '\n'))
   }
 
-  if (any(is.na(df_nodes$word))) warning('Node ids have NAs')
+  if (any(is.na(df_nodes$id))) warning('Node ids have NAs')
 
   list(df_links = df_links, df_nodes = df_nodes)
 }
@@ -129,14 +129,14 @@ merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other,
   df_links$from[nodes_other][reset_other] = str_other
 
   if (!any(reset_other)) {
-    df_nodes %<>% subset(word != str_other)
+    df_nodes %<>% subset(id != str_other)
   }
  
-  new_nodes = setdiff(unique(unlist(df_links[1:2])), unique(df_nodes$word))
+  new_nodes = setdiff(unique(unlist(df_links[1:2])), unique(df_nodes$id))
 
   if (length(new_nodes)) {
 
-    df_new_nodes = data.frame(word = new_nodes, desc = new_nodes,
+    df_new_nodes = data.frame(id = new_nodes, desc = new_nodes,
                               clusters = 'Groups',
                               display_val = NA,
                               selected_concept = target_names[1])
@@ -149,7 +149,7 @@ merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other,
   }
  
   fix_links = df_links$to[nodes_other][!reset_other]
-  links_idxs = match(fix_links, df_nodes$word)
+  links_idxs = match(fix_links, df_nodes$id)
 
   links_dict_idxs = match(fix_links, df_dict$id)
   df_nodes$clusters[links_idxs] = df_dict$color[links_dict_idxs]
@@ -167,7 +167,7 @@ merge_kgraphs_groups = function(df_links, df_nodes, df_dict, str_other,
   grp_idxs = match(df_links$from, df_grp_wts$group)
   df_links$weight[!is.na(grp_idxs)] = df_grp_wts$weight[na.omit(grp_idxs)]
 
-  grp_idxs = match(df_nodes$word, df_grp_wts$group)
+  grp_idxs = match(df_nodes$id, df_grp_wts$group)
   wts = df_grp_wts$weight[na.omit(grp_idxs)] - (max(df_nodes$weight) / 5)
   df_nodes$weight[!is.na(grp_idxs)] = wts
 

@@ -107,9 +107,9 @@ build_kgraph_nodes = function(first_order_links, second_order_links,
   }
 
   df_nodes = rbind(df_root, df_leafs, df_groups, df_drugs) %>%
-      setNames(c('word', 'desc', 'clusters'))
+      setNames(c('id', 'desc', 'clusters'))
 
-  display_val_idx = match(df_nodes$word, df_weights$concept2)
+  display_val_idx = match(df_nodes$id, df_weights$concept2)
   df_nodes$display_val <- round(df_weights$weight[display_val_idx],
                                 display_val_digits)
   df_nodes$display_val[1] = NA
@@ -129,7 +129,7 @@ build_kgraph_nodes = function(first_order_links, second_order_links,
   df_nodes$selected_concept = selected_concept
 
   ## reduce group edges
-  # group_edges = df_links$from %in% subset(df_nodes, clusters == 'Groups')$word
+  # group_edges = df_links$from %in% subset(df_nodes, clusters == 'Groups')$id
   # df_links$weight[group_edges] %<>% `/`(2)
 
   df_nodes
