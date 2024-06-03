@@ -7,7 +7,7 @@ run apt-get update && \
 run R -e "install.packages(c('dplyr', 'reshape2', 'RColorBrewer', 'pROC', 'text2vec', 'flexdashboard'))"
 
 run apt-get install -y git
-run R -e "remotes::install_git('https://gitlab.com/thomaschln/sigmagraph.git', ref = 'f05000a4e2e11f38f984f70e824abb461f281699')"
+run R -e "remotes::install_git('https://gitlab.com/thomaschln/sgraph.git')"
 
 add ./ /kgraph
 run R -e "devtools::install('kgraph', dependencies = TRUE)"

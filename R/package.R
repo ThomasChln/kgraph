@@ -2,7 +2,7 @@
 #' @importFrom magrittr %>% %<>% %$%
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom reshape2 melt
-#' @importFrom sigmagraph convert_to_spring_weights get_color_map scale_graph
+#' @importFrom sgraph convert_to_spring_weights get_color_map scale_graph
 NULL
 
 #' Magrittr pipe operator

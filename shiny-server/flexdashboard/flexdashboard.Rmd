@@ -17,7 +17,7 @@ runtime: shiny
 
 ```{r}
   devtools::load_all()
-  #library(sigmagraph)
+  #library(sgraph)
 
   dirpath = system.file('data', package = 'kgraph')
   m_embeds = get(load(file.path(dirpath, 'm_embeds.rds')))
@@ -37,23 +37,25 @@ runtime: shiny
 
   # tail is more related to mental health
   # subset(df_dict, id %in% pairs_intersect)$label
-  select_cuis = tail(pairs_intersect, 500)
+
+  # select_cuis = tail(pairs_intersect, 500)
+  select_cuis = pairs_intersect
   m_embeds = m_embeds[select_cuis, ]
   df_dict = subset(df_dict, id %in% select_cuis)
 
   target_strs = c('autistic spectrum', 'depressi', 'alcohol' ,'sleep',
 		  'psychosis', 'dementia', 'insomnia')
+  target_strs = 'suicid'
   target_idxs = grep(paste(target_strs, collapse = '|'), df_dict$label)
   target_cuis = df_dict$id[target_idxs]
+  similarity = 'cosine'; threshold_projs = 5; label_grid_size = 200
   #
 
   react_fit = shiny::reactive({
       similarity = input$similarity
-      sparse_coding = input$sparse_coding
       threshold_projs = input$threshold_projs
       fit_kg = fit_embeds_to_pairs(m_embeds, df_pairs[df_pairs_cols],
 				   similarity = similarity,
-				   sparse_coding = sparse_coding,
 				   threshold_projs = 1 - threshold_projs / 100)
     })
 
@@ -77,7 +79,7 @@ runtime: shiny
 
   react_legend = shiny::reactive({
       kgraph = react_kgraph()
-      gglegend = sigmagraph:::get_legend(colors_mapping,
+      gglegend = sgraph:::get_legend(colors_mapping,
 					 unique(kgraph$df_nodes$clusters))
     })
 
@@ -86,7 +88,7 @@ runtime: shiny
       pROC::plot.roc(fit_kg$roc, print.auc = TRUE)
     })
 
-  output$kg = sigmagraph::renderSigmagraph(react_sgraph())
+  output$kg = sgraph::renderSgraph(react_sgraph())
   output$legend = shiny::renderPlot(grid::grid.draw(react_legend()))
   output$auc = shiny::renderPlot(react_auc(), res = 96)
 
@@ -99,9 +101,6 @@ runtime: shiny
 ```{r}
   shiny::selectInput('similarity', 'Similarity', 
     c('inprod', 'cosine', 'cov_simi', 'norm_inprod'), selected = 'cosine')
-
-  shiny::selectInput('sparse_coding', 'Sparse coding', 
-    c('none', 'epsilon'), selected = 'none')
 
   shiny::sliderInput('threshold_projs', 'False positive threshold (%)',
 		     0, 100, 10)
@@ -126,7 +125,7 @@ runtime: shiny
 ```{r}
   # some target nodes have no groups ?
   # is drug abstinence linked to dementia ? lol
-  fillPage(sigmagraph::sigmagraphOutput('kg', height = '100%'),
+  fillPage(sgraph::sgraphOutput('kg', height = '100%'),
            absolutePanel(id = 'legend', class = 'panel panel-default',
                          fixed = TRUE, draggable = TRUE, top = 100,
     	                 left = 'auto', right = 20, bottom = 'auto',

@@ -111,12 +111,15 @@ order_dataframe = function(df_x, cols = 1:2, relevant_pattern = NULL) {
   df_x
 }
 
-gen_df_notpairs = function(ids, df_pairs) {
+gen_df_notpairs = function(ids, df_pairs, type = c('pair_eq', 'half_id_mat'),
+			   n_notpairs = switch(match.arg(type),
+					       pair_eq = nrow(df_pairs),
+					       half_id_mat = length(ids) ^ 2 / 2)) {
 
   set.seed(1)
-  df_notpairs = sample(ids, nrow(df_pairs) * 4, replace = TRUE) %>%
+  df_notpairs = sample(ids, n_notpairs * 4, replace = TRUE) %>%
       matrix(ncol = 2) %>% as.data.frame %>% setNames(names(df_pairs[1:2]))
 
   df_notpairs %>% subset(.[[1]] != .[[2]]) %>% order_dataframe %>%
-    setdiff_dataframe(df_pairs) %>% head(nrow(df_pairs))
+    setdiff_dataframe(df_pairs) %>% head(n_notpairs)
 }
